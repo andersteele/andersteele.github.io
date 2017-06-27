@@ -96,3 +96,5 @@ These preliminary results suggest that variations of the U-net architecture, in 
 + We are currently predicting each slice independently. Can we combine these methods with LSTM architectures to more accurately label slices through 3D volumes? 
 
 
+## Source
+Code is available [here](https://github.com/andersteele/Cell-labelling). 
