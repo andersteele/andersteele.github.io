@@ -5,6 +5,7 @@ date:   2017-06-20
 categories: machine learning
 ---
 
+{% include images.css %}
 
 Problem description
 ============
