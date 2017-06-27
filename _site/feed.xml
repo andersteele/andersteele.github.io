@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.4.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2017-06-27T11:20:04-07:00</updated><id>http://localhost:4000/</id><title type="html">Ander Steele</title><subtitle>Mathematics, etc. 
+</subtitle><entry><title type="html">Labelling cell components with neural networks</title><link href="http://localhost:4000/machine/learning/2017/06/20/cellsegmentation.html" rel="alternate" type="text/html" title="Labelling cell components with neural networks" /><published>2017-06-20T00:00:00-07:00</published><updated>2017-06-20T00:00:00-07:00</updated><id>http://localhost:4000/machine/learning/2017/06/20/cellsegmentation</id><content type="html" xml:base="http://localhost:4000/machine/learning/2017/06/20/cellsegmentation.html">&lt;style type=&quot;text/css&quot;&gt;
+
+.right {
+    float: right;
+}
+
+.center {
+    display: block;
+    margin: auto;
+}
+&lt;/style&gt;
+
+&lt;h1 id=&quot;problem-description&quot;&gt;Problem description&lt;/h1&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/B-cell.png&quot; alt=&quot;Human B-Cell&quot; class=&quot;right&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The &lt;a href=&quot;http://ncxt.lbl.gov&quot;&gt;National Center for Xray Tomography&lt;/a&gt; uses soft
+x-ray tomography to produce incredibly detailed images of whole cells. Their
+imaging techniques allow for high-resolution images of cells without staining
+or dehydrating, providing a detailed view of cells in their native state.&lt;/p&gt;
+
+&lt;p&gt;The images produced by the x-ray tomography are 3D arrays of densities (or
+linear absorption coefficients). Each array consists of approximately
+400x400x400 voxels, each voxel a single floating point between 0 and 1.
+For many applications in cell biology and biomedical research, one wants
+accurate labellings of the various cell organelles. That is, we want to
+determine if a given voxel belongs to the cell cytoplasm, nucleus, mitochondria, etc. While
+it is possible for an expert to methodically label each of the 64 million
+voxel, even with the best existing software this is an extremely slow and
+laborious process. Therefore, any tools that can assist experts in quickly
+labelling the cellular data could provide enormous savings of time and
+energy, and allow for a vast increase in the amount of labelled data.&lt;/p&gt;
+
+&lt;h1 id=&quot;methods&quot;&gt;Methods&lt;/h1&gt;
+
+&lt;p&gt;We propose a method based on recent advances in deep learning–a field which
+has shown striking success on the problems of image labelling and image
+segmentation. In particular, we use a convolutional neural network based on
+the architectures of &lt;a href=&quot;https://arxiv.org/abs/1505.04366&quot;&gt;DeconvNet&lt;/a&gt; and
+&lt;a href=&quot;https://arxiv.org/abs/1505.04597&quot;&gt;U-net&lt;/a&gt; to solve two binary classification
+problems: does a pixel belong to the cytoplasm; and, if so, does the pixel
+belong to the nucleus?&lt;/p&gt;
+
+&lt;p&gt;A human-expert labels the cell data one two-dimensional slice at a time. We employ a similar strategy, slicing the 3D array into 256x256 images. The output of our models is a 256x256 image of labels. Given our limited training data, we use a &lt;em&gt;transfer-learning&lt;/em&gt; strategy. The architecture uses the first five convolution + max-pooling blocks of VGG-16, with weights trained on the ImageNet classification problem. These blocks are followed by five convolution + up-sampling blocks, along with skip through layers at blocks 2,3 and 4. 
+&lt;img src=&quot;/images/labelled_model.png&quot; alt=&quot;Model&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The deconvolutional layers of our model are trained on our limited data, and we find that the low-level features extracted by the VGG-16 layers work extremely well in our network: we achieve high accuracy with models trained on around 8000 training samples.&lt;/p&gt;
+
+&lt;p&gt;The three classes are extremely unbalanced: Only 3% of the voxels belong to the nucleus. We address the class imbalance by training two separate models: The first model determines if a voxel belongs to the cell or not. The second model determines if a voxel belongs to the nucleus. We oversample our training data for the second model so that a much higher proportion of training samples contain nucleus voxels.&lt;/p&gt;
+
+&lt;h2 id=&quot;results&quot;&gt;Results&lt;/h2&gt;
+
+&lt;h1 id=&quot;cell-detection&quot;&gt;Cell Detection&lt;/h1&gt;
+
+&lt;p&gt;Training on approximately 8000 samples, the cell detection model achieves an average accuracy of 0.9640 and an average Jaccard score of 0.8566 on cross-validation.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Input&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Ground truth&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Predicted&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_input_1.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_ground_1.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_pred_1.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9916&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9851&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_input_2.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_ground_2.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_pred_2.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9921&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9870&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_input_3.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_ground_3.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/med_cell_pred_3.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9922&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9824&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h1 id=&quot;nucleus-detection&quot;&gt;Nucleus Detection&lt;/h1&gt;
+
+&lt;p&gt;Training on approximately 8000 samples, the nucleus model achieves an average accuracy 0.9784 and an average Jaccard score of 0.8642 on cross-validation.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Input&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Ground truth&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Predicted&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_input_1.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_ground_1.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_pred_1.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9802&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9506&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_input_2.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_ground_2.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_pred_2.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9866&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9540&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_input_3.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_ground_3.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/nucleus_pred_3.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt; &lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Accuracy: 0.9767&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;Jaccard: 0.9218&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h1 id=&quot;combined&quot;&gt;Combined&lt;/h1&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Input&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Ground truth&lt;/th&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Predicted&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/1_input.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/1_ground.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/1_pred.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/2_input.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/2_ground.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/2_pred.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/3_input.png&quot; alt=&quot;Input&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/3_ground.png&quot; alt=&quot;Ground&quot; /&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;&lt;img src=&quot;/images/3_pred.png&quot; alt=&quot;pred&quot; /&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h2 id=&quot;future-work&quot;&gt;Future work&lt;/h2&gt;
+
+&lt;p&gt;These preliminary results suggest that variations of the U-net architecture, in tandem with transfer learning, can produce highly accurate segmentations of the cell images. There are many questions left to investigate–in particular:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Can we achieve similar accuracies with simpler or shallower architectures?&lt;/li&gt;
+  &lt;li&gt;How does the model perform on different cell types? So far, the data is limited to human B-Cells.&lt;/li&gt;
+  &lt;li&gt;How much can we improve over-all accuracy by ensembling predictions on overlapping slices?&lt;/li&gt;
+  &lt;li&gt;We are currently predicting each slice independently. Can we combine these methods with LSTM architectures to more accurately label slices through 3D volumes?&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><summary type="html"></summary></entry></feed>
