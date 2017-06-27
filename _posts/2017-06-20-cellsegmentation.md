@@ -40,7 +40,7 @@ the architectures of [DeconvNet](https://arxiv.org/abs/1505.04366) and
 problems: does a pixel belong to the cytoplasm; and, if so, does the pixel
 belong to the nucleus?
 
-A human-expert labels the cell data one two-dimensional slice at a time. We employ a similar strategy, slicing the 3D array into 256x256 images. The output of our models is a 256x256 image of labels. Given our limited training data, we use a *transfer-learning* strategy. The architecture uses the first five convolution + max-pooling blocks of VGG-16, with weights trained on the ImageNet classification problem. These blocks are followed by five convolution + up-sampling blocks, along with skip through layers at blocks 2,3 and 4. 
+A human-expert labels the cell data one two-dimensional slice at a time. We employ a similar strategy, slicing the 3D array into 256x256 images. The output of our models is a 256x256 image of labels. Given our limited training data, we use a *transfer-learning* strategy. The architecture uses the first five convolution + max-pooling blocks of VGG-16, with weights trained on the ImageNet classification problem. These blocks are followed by five convolution + up-sampling blocks, along with skip through layers at blocks 2,3 and 4. We use [Keras](https://keras.io/) to implement and train the model.  
 ![Model](/images/labelled_model.png)
 
 The deconvolutional layers of our model are trained on our limited data, and we find that the low-level features extracted by the VGG-16 layers work extremely well in our network: we achieve high accuracy with models trained on around 8000 training samples.
